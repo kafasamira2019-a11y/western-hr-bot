@@ -6,9 +6,17 @@ const server = http.createServer((req, res) => {
   res.setHeader('Content-Type', 'text/plain');
   res.end('Telegram Bot is running!\n');
 });
-server.listen(port, () => {
-  console.log(`Server running at port ${port}/`);
-});
+server.listen(port, () => { console.log(`Server running at port ${port}/`); });
+
+  // Render Free Tier keep-alive ping
+  setInterval(() => {
+    fetch('https://western-hr-bot.onrender.com/').then(res => {
+      console.log('Self-ping successful:', res.status);
+    }).catch(err => {
+      console.error('Self-ping failed:', err.message);
+    });
+  }, 14 * 60 * 1000); // Ping every 14 minutes
+
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from 'firebase/firestore';
