@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>PDF Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            background: #e5e7eb; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 10px 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        #pdf-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        canvas { 
+            max-width: 95%; 
+            height: auto; 
+            background: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); 
+            border-radius: 4px;
+        }
+        .loading {
+            padding: 20px;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div id="pdf-container">
+        <div class="loading" id="loading">Loading PDF document...</div>
+    </div>
+    <script>
+        // Set worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        async function loadPdf() {
+            try {
+                // Get base64 string from sessionStorage to avoid passing huge strings in URL
+                const base64Str = sessionStorage.getItem('currentPdfBase64');
+                if (!base64Str) {
+                    document.getElementById('loading').innerText = 'Error: No PDF data provided.';
+                    return;
+                }
+
+                // Strip data URL prefix if present
+                let b64 = base64Str;
+                if (b64.includes(',')) {
+                    b64 = b64.split(',')[1];
+                }
+
+                const pdfData = atob(b64);
+                const uint8Array = new Uint8Array(pdfData.length);
+                for (let i = 0; i < pdfData.length; i++) {
+                    uint8Array[i] = pdfData.charCodeAt(i);
+                }
+                
+                const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+                const pdf = await loadingTask.promise;
+                
+                const container = document.getElementById('pdf-container');
+                document.getElementById('loading').remove();
+                
+                // Determine scale based on window width to ensure it looks good on mobile
+                const screenWidth = window.innerWidth;
+                const baseScale = screenWidth < 768 ? 1.0 : 1.5;
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    
+                    const viewport = page.getViewport({ scale: baseScale });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    container.appendChild(canvas);
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerText = 'Error loading PDF: ' + err.message;
+            }
+        }
+
+        window.onload = loadPdf;
+    </script>
+</body>
+</html>

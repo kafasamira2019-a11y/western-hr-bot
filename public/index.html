@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruitment ATS Dashboard</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+    
+    /* Form Styles */
+    .form-container { background: #f0f7fa; padding: 20px; border-radius: 6px; margin-bottom: 30px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input[type="text"], input[type="email"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { background-color: #3498db; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #2980b9; }
+    
+    /* Table Styles */
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background-color: #3498db; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    
+    .error { color: #e74c3c; font-weight: bold; padding: 10px; background: #fadbd8; border-radius: 4px; display: inline-block; }
+    .success { color: #27ae60; font-weight: bold; padding: 10px; background: #d5f5e3; border-radius: 4px; margin-top: 10px; }
+    .loading { font-style: italic; color: #7f8c8d; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Recruitment Dashboard (ATS)</h1>
+    
+    <!-- Candidate Submission Form -->
+    <div class="form-container">
+      <h2>Add New Candidate</h2>
+      <form id="candidateForm">
+        <!-- Hidden input for the required 'action' parameter -->
+        <input type="hidden" name="action" value="add">
+        
+        <div class="form-group">
+          <label for="name">Candidate Name</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="position">Applied Position</label>
+          <input type="text" id="position" name="position" required>
+        </div>
+        <div class="form-group">
+          <label for="resumeLink">Resume Link (URL)</label>
+          <input type="text" id="resumeLink" name="resumeLink">
+        </div>
+        <button type="submit" id="submitBtn">Submit Candidate</button>
+        <div id="formStatus"></div>
+      </form>
+    </div>
+
+    <h2>Candidate Database</h2>
+    <div id="status" class="loading">Loading candidate data from Google Sheets...</div>
+    
+    <!-- Data Table -->
+    <table id="dataTable" style="display:none;">
+      <thead id="dataHead"></thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD2pPYWIz0WiScTnkZ5lhIZgpLEFtJH4_U",
+      authDomain: "recruitment-13f32.firebaseapp.com",
+      projectId: "recruitment-13f32",
+      storageBucket: "recruitment-13f32.firebasestorage.app",
+      messagingSenderId: "1006966480373",
+      appId: "1:1006966480373:web:fe8b0f0e287366017854bc",
+      measurementId: "G-TVT6T7P85S"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbyDAB6OE9BnC6HNVs_yl5A4BsRurxHoVJsnt-GW4ZiQWiWD_w9-7NBVP_vkgi2pImM6/exec";
+    
+    const statusDiv = document.getElementById('status');
+    const dataTable = document.getElementById('dataTable');
+    const dataHead = document.getElementById('dataHead');
+    const dataBody = document.getElementById('dataBody');
+    const form = document.getElementById('candidateForm');
+    const formStatus = document.getElementById('formStatus');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Generate a random ID for the new candidate (Database ID)
+    function generateId() {
+      return Math.random().toString(36).substr(2, 9);
+    }
+
+    // 1. Function to Fetch Data (Requires a doGet function in Apps Script)
+    async function fetchData() {
+      try {
+        const response = await fetch(scriptUrl, {
+          method: 'GET',
+          redirect: 'follow' 
+        });
+        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const text = await response.text();
+        
+        try {
+            const data = JSON.parse(text);
+            if (data && data.length > 0) {
+                renderTable(data);
+                statusDiv.style.display = 'none';
+                dataTable.style.display = 'table';
+            } else {
+                statusDiv.textContent = 'No candidates found in the Google Sheet yet.';
+                statusDiv.className = '';
+            }
+        } catch (e) {
+            console.error("Parse Error:", e);
+            statusDiv.innerHTML = `<span class="error">Data format error. Are you sure your Apps Script has a doGet() function?</span>`;
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `<span class="error">Network Error fetching data. <br>Detailed Error: ${error.message}<br>You need to add a doGet() function to your Apps Script to fix this CORS error!</span>`;
+      }
+    }
+
+    function renderTable(data) {
+      dataHead.innerHTML = '';
+      dataBody.innerHTML = '';
+      
+      const headers = Object.keys(data[0]);
+      const trHead = document.createElement('tr');
+      headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        trHead.appendChild(th);
+      });
+      dataHead.appendChild(trHead);
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        headers.forEach(header => {
+          const td = document.createElement('td');
+          td.textContent = row[header] || '';
+          tr.appendChild(td);
+        });
+        dataBody.appendChild(tr);
+      });
+    }
+
+    // 2. Function to Submit Data via POST
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      formStatus.innerHTML = '';
+
+      const formData = new FormData(form);
+      formData.append('id', generateId()); // Add unique ID for the candidate
+      
+      try {
+        // Submit using form-urlencoded so Apps Script parses e.parameter correctly
+        const urlEncodedData = new URLSearchParams(formData).toString();
+        
+        await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: urlEncodedData
+        });
+        
+        formStatus.innerHTML = '<div class="success">Candidate submitted successfully!</div>';
+        form.reset();
+        
+        // Refresh table after submission
+        setTimeout(fetchData, 2000);
+      } catch (error) {
+        formStatus.innerHTML = `<div class="error">Error submitting: ${error.message}</div>`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Candidate';
+      }
+    });
+
+    fetchData();
+  </script>
+</body>
+</html>

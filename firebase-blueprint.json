@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System users (HR and internal staff)",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "recruiter", "interviewer", "employee"] },
+        "department": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["email", "name", "role", "createdAt"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Candidate application for a job",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 100 },
+        "position": { "type": "string", "maxLength": 150 },
+        "resumeLink": { "type": "string", "maxLength": 500 },
+        "resumeBase64": { "type": "string", "maxLength": 800000 },
+        "resumeName": { "type": "string", "maxLength": 200 },
+        "status": { "type": "string", "enum": ["new", "reviewing", "interviewed", "offered", "hired", "rejected"] },
+        "isShortlisted": { "type": "boolean" },
+        "appliedAt": { "type": "number" }
+      },
+      "required": ["name", "email", "position", "status", "isShortlisted", "appliedAt"]
+    },
+    "Interview": {
+      "title": "Interview",
+      "description": "Interview schedule and status",
+      "type": "object",
+      "properties": {
+        "applicationId": { "type": "string" },
+        "candidateName": { "type": "string", "maxLength": 100 },
+        "position": { "type": "string", "maxLength": 150 },
+        "resumeBase64": { "type": "string", "maxLength": 800000 },
+        "resumeName": { "type": "string", "maxLength": 200 },
+        "resumeLink": { "type": "string", "maxLength": 500 },
+        "interviewDate": { "type": "string" },
+        "interviewTime": { "type": "string" },
+        "interviewType": { "type": "string", "enum": ["Online", "Offline"] },
+        "stage": { "type": "string", "enum": ["First round", "Second round", "Final Round"] },
+        "status": { "type": "string", "enum": ["Scheduled", "Pass the First round interview", "Pass the Second Round Interview", "Offer Job"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["applicationId", "candidateName", "position", "interviewDate", "interviewTime", "interviewType", "stage", "status", "createdAt"]
+    },
+    "Evaluation": {
+      "title": "Evaluation",
+      "description": "Collaborative decision matrix and feedback",
+      "type": "object",
+      "properties": {
+        "applicationId": { "type": "string" },
+        "evaluatorId": { "type": "string" },
+        "evaluatorName": { "type": "string" },
+        "technicalScore": { "type": "number" },
+        "culturalScore": { "type": "number" },
+        "comments": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["applicationId", "evaluatorId", "technicalScore", "culturalScore", "createdAt"]
+    },
+    "FormRecord": {
+      "title": "FormRecord",
+      "description": "Internal HR forms (manpower request, salary approval, job offer)",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["manpower", "salary", "jobOffer"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "title": { "type": "string" },
+        "details": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["type", "status", "title", "createdBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "HR and internal staff profiles"
+    },
+    "applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Candidate applications submitted via portal"
+    },
+    "evaluations/{evaluationId}": {
+      "schema": "Evaluation",
+      "description": "Interview feedback and scores"
+    },
+    "interviews/{interviewId}": {
+      "schema": "Interview",
+      "description": "Interview schedule and tracking"
+    },
+    "forms/{formId}": {
+      "schema": "FormRecord",
+      "description": "Internal approval workflows"
+    }
+  }
+}

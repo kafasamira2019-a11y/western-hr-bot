@@ -1,0 +1,6 @@
+{
+  "name": "RecruitPro ATS",
+  "description": "Enterprise applicant tracking system with candidate portal, HR dashboards, and onboarding workflow.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
