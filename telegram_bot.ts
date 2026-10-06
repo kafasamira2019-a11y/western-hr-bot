@@ -1,4 +1,15 @@
 import { Telegraf } from 'telegraf';
+import * as http from 'http';
+const port = process.env.PORT || 3000;
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Telegram Bot is running!\n');
+});
+server.listen(port, () => {
+  console.log(`Server running at port ${port}/`);
+});
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { generatePDF } from './src/utils/formPdfGenerator';
