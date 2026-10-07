@@ -230,7 +230,7 @@ if (sessionString) {
     
     client.addEventHandler(async (event) => {
       const message = event.message;
-      if (!message.out && message.media) {
+      if (message.media) {
         
           const text = (message.message || "").toLowerCase();
           
