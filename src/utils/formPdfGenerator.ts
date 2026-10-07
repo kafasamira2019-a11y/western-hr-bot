@@ -893,7 +893,8 @@ export const generatePDF = (form: InternalFormData, options?: any) => {
     docPDF.text("Type of Employment:", 15, y);
     docPDF.setFont('times', 'normal');
     drawCheck("Full-Time", form.offerEmploymentType === 'Full-Time', 60, y, 4);
-    drawCheck("Part-Time", form.offerEmploymentType === 'Part-Time', 90, y, 4);
+    drawCheck("Semi-Full-Time", form.offerEmploymentType === 'Semi-Full-Time', 90, y, 4);
+    drawCheck("Part-Time", form.offerEmploymentType === 'Part-Time', 130, y, 4);
     
     y += 10;
     docPDF.setFont('times', 'bold');
