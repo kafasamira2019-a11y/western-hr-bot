@@ -70,6 +70,10 @@ bot.on('text', async (ctx) => {
     state.step = 5;
     ctx.reply("ជិតរួចរាល់ហើយ! សូមបញ្ចូលប្រវត្តិរូបសង្ខេប (CV/Resume) ជាទម្រង់ PDF របស់អ្នក៖\nAlmost done! Please upload your **CV/Resume (PDF format)**:", { parse_mode: 'Markdown' });
   } else if (state.step === 10) {
+    state.data.forwardedApp.candidateName = ctx.message.text;
+    state.step = 11;
+    ctx.reply("តើគាត់ចង់ដាក់ពាក្យលើតួនាទីអ្វី?\nWhat position do they want to apply for?", { parse_mode: 'Markdown' });
+  } else if (state.step === 11) {
     const position = ctx.message.text;
     const appInfo = state.data.forwardedApp;
     
@@ -126,33 +130,19 @@ bot.on('text', async (ctx) => {
 
 bot.on('document', async (ctx) => {
     const chatId = ctx.chat.id;
-    let candidateName = "Unknown Candidate";
 
     if (ctx.message.forward_origin || ctx.message.forward_date) {
-        if (ctx.message.forward_origin && ctx.message.forward_origin.sender_user) {
-            candidateName = ctx.message.forward_origin.sender_user.first_name || "";
-            if (ctx.message.forward_origin.sender_user.last_name) candidateName += " " + ctx.message.forward_origin.sender_user.last_name;
-        } else if (ctx.message.forward_from) {
-            candidateName = ctx.message.forward_from.first_name || "";
-            if (ctx.message.forward_from.last_name) candidateName += " " + ctx.message.forward_from.last_name;
-        } else if (ctx.message.forward_sender_name) {
-            candidateName = ctx.message.forward_sender_name;
-        } else {
-            candidateName = "Candidate (Hidden Name)";
-        }
-        
         userState[chatId] = {
            step: 10,
            data: {
               forwardedApp: {
-                 candidateName: candidateName,
                  fileId: ctx.message.document.file_id,
                  fileName: ctx.message.document.file_name,
                  mimeType: ctx.message.document.mime_type
               }
            }
         };
-        return ctx.reply(`អ្នកបានបញ្ជូន CV របស់បេក្ខជន **${candidateName}** ។\nតើគាត់ចង់ដាក់ពាក្យលើតួនាទីអ្វី?\n\nYou forwarded the CV of **${candidateName}**.\nWhat position do they want to apply for?`, { parse_mode: 'Markdown' });
+        return ctx.reply("តើបេក្ខជនមានឈ្មោះអ្វី?\nWhat is the candidate's name?", { parse_mode: 'Markdown' });
     } else {
         if (!userState[chatId] || userState[chatId].step !== 5) {
           return ctx.reply("សូមវាយ /start ឬប្រើ Menu ដើម្បីចាប់ផ្តើម។ | Please type /start or use the menu to begin.");
