@@ -35,7 +35,7 @@ const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 const bot = new Telegraf('8879984624:AAEHqarqaXI3KffYuFLelAyNhJmQqCN_qrg');
 
 bot.telegram.setMyCommands([
-  { command: 'start', description: 'áž…áž¶áž”áŸ‹áž•áŸ’ážáž¾áž˜ážŠáž¶áž€áŸ‹áž–áž¶áž€áŸ’áž™ | Start Application' }
+  { command: 'start', description: 'ចាប់ផ្តើមដាក់ពាក្យ | Start Application' }
 ]).catch(console.error);
 
 const userState: Record<number, any> = {};
@@ -43,32 +43,32 @@ const userState: Record<number, any> = {};
 bot.start((ctx) => {
   const chatId = ctx.chat.id;
   userState[chatId] = { step: 1, data: {} };
-  const welcomeMsg = `ðŸŽ“ **ážŸáž¼áž˜ážŸáŸ’ážœáž¶áž‚áž˜áž“áŸáž˜áž€áž€áž¶áž“áŸ‹ážŸáž¶áž›áž¶áž¢áž“áŸ’ážážšáž‡áž¶ážáž·ážœáŸážŸáŸ’áž‘áž¾áž“! | Welcome to Western International School!**\n\nážŸáž¼áž˜áž¢ážšáž‚áž»ážŽáž…áŸ†áž–áŸ„áŸ‡áž…áŸ†ážŽáž¶áž”áŸ‹áž¢áž¶ážšáž˜áŸ’áž˜ážŽáŸážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áž€áŸ’áž“áž»áž„áž€áž¶ážšáž…áž¼áž›ážšáž½áž˜áž‡áž¶áž˜áž½áž™áž€áŸ’ážšáž»áž˜áž€áž¶ážšáž„áž¶ážš áž“áž·áž„áž¢áŸ’áž“áž€áž‡áŸ†áž“áž¶áž‰áž¢áž”áŸ‹ážšáŸ†ážšáž”ážŸáŸ‹áž™áž¾áž„áŸ” áž™áž¾áž„áž”áŸ’ážáŸáž‡áŸ’áž‰áž¶áž…áž·ážáŸ’ážáž€áŸ’áž“áž»áž„áž€áž¶ážšáž›áž¾áž€áž€áž˜áŸ’áž–ážŸáŸ‹áž§ážáŸ’ážáž˜áž—áž¶áž–ážŸáž·áž€áŸ’ážŸáž¶ áž“áž·áž„áž–áž„áŸ’ážšáž¹áž„ážŸáž˜ážáŸ’ážáž—áž¶áž–áž¢áŸ’áž“áž€ážŠáž¹áž€áž“áž¶áŸ†áž‡áŸ†áž“áž¶áž“áŸ‹áž€áŸ’ážšáŸ„áž™áŸ”\n\nThank you for your interest in joining our dedicated team of educators and professionals. We are committed to fostering academic excellence and empowering the next generation of leaders.\n\nážŠáž¾áž˜áŸ’áž”áž¸áž…áž¶áž”áŸ‹áž•áŸ’ážáž¾áž˜ážŠáŸ†ážŽáž¾ážšáž€áž¶ážšážŠáž¶áž€áŸ‹áž–áž¶áž€áŸ’áž™ ážŸáž¼áž˜ážœáž¶áž™áž”áž‰áŸ’áž…áž¼áž›ážˆáŸ’áž˜áŸ„áŸ‡áž–áŸáž‰ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áŸ–\nTo begin your application process, please reply with your **Full Name**:`;
+  const welcomeMsg = `🎓 **សូមស្វាគមន៍មកកាន់សាលាអន្តរជាតិវេស្ទើន! | Welcome to Western International School!**\n\nសូមអរគុណចំពោះចំណាប់អារម្មណ៍របស់អ្នកក្នុងការចូលរួមជាមួយក្រុមការងារ និងអ្នកជំនាញអប់រំរបស់យើង។ យើងប្តេជ្ញាចិត្តក្នុងការលើកកម្ពស់ឧត្តមភាពសិក្សា និងពង្រឹងសមត្ថភាពអ្នកដឹកនាំជំនាន់ក្រោយ។\n\nThank you for your interest in joining our dedicated team of educators and professionals. We are committed to fostering academic excellence and empowering the next generation of leaders.\n\nដើម្បីចាប់ផ្តើមដំណើរការដាក់ពាក្យ សូមវាយបញ្ចូលឈ្មោះពេញរបស់អ្នក៖\nTo begin your application process, please reply with your **Full Name**:`;
   ctx.reply(welcomeMsg, { parse_mode: 'Markdown' });
 });
 
 bot.on('text', (ctx) => {
   const chatId = ctx.chat.id;
   if (!userState[chatId]) {
-    return ctx.reply("ážŸáž¼áž˜áž…áž»áž…áž›áž¾ /start áž¬ Menu ážŠáž¾áž˜áŸ’áž”áž¸áž…áž¶áž”áŸ‹áž•áŸ’ážáž¾áž˜áŸ”\nPlease type /start or use the menu to begin.");
+    return ctx.reply("សូមចុចលើ /start ឬ Menu ដើម្បីចាប់ផ្តើម។\nPlease type /start or use the menu to begin.");
   }
   const state = userState[chatId];
   if (state.step === 1) {
     state.data.name = ctx.message.text;
     state.step = 2;
-    ctx.reply("áž¢ážŸáŸ’áž…áž¶ážšáŸ’áž™ážŽáž¶ážŸáŸ‹! ážáž¾áž¢áŸ’áž“áž€áž€áŸ†áž–áž»áž„ážŠáž¶áž€áŸ‹áž–áž¶áž€áŸ’áž™ážŸáž˜áŸ’ážšáž¶áž”áŸ‹ážáž½áž“áž¶áž‘áž¸áž¢áŸ’ážœáž¸?\nGreat! What **Position** are you applying for?", { parse_mode: 'Markdown' });
+    ctx.reply("អស្ចារ្យណាស់! តើអ្នកកំពុងដាក់ពាក្យសម្រាប់តួនាទីអ្វី?\nGreat! What **Position** are you applying for?", { parse_mode: 'Markdown' });
   } else if (state.step === 2) {
     state.data.position = ctx.message.text;
     state.step = 3;
-    ctx.reply("ážŸáž¼áž˜áž•áŸ’ážáž›áŸ‹áž¢áž¶ážŸáž™ážŠáŸ’áž‹áž¶áž“áž¢áŸŠáž¸áž˜áŸ‚áž›ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áŸ–\nPlease provide your **Email Address**:", { parse_mode: 'Markdown' });
+    ctx.reply("សូមផ្តល់អាសយដ្ឋានអ៊ីមែលរបស់អ្នក៖\nPlease provide your **Email Address**:", { parse_mode: 'Markdown' });
   } else if (state.step === 3) {
     state.data.email = ctx.message.text;
     state.step = 4;
-    ctx.reply("ážŸáž¼áž˜áž•áŸ’ážáž›áŸ‹áž›áŸážáž‘áž¼ážšážŸáŸáž–áŸ’áž‘ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áŸ–\nPlease provide your **Phone Number**:", { parse_mode: 'Markdown' });
+    ctx.reply("សូមផ្តល់លេខទូរស័ព្ទរបស់អ្នក៖\nPlease provide your **Phone Number**:", { parse_mode: 'Markdown' });
   } else if (state.step === 4) {
     state.data.phone = ctx.message.text;
     state.step = 5;
-    ctx.reply("áž‡áž·ážážšáž½áž…ážšáž¶áž›áŸ‹áž áž¾áž™! ážŸáž¼áž˜áž”áž‰áŸ’áž…áž¼áž›áž”áŸ’ážšážœážáŸ’ážáž·ážšáž¼áž”ážŸáž„áŸ’ážáŸáž” (CV/Resume) áž‡áž¶áž‘áž˜áŸ’ážšáž„áŸ‹ PDF ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€áŸ–\nAlmost done! Please upload your **CV/Resume (PDF format)**:", { parse_mode: 'Markdown' });
+    ctx.reply("ជិតរួចរាល់ហើយ! សូមបញ្ចូលប្រវត្តិរូបសង្ខេប (CV/Resume) ជាទម្រង់ PDF របស់អ្នក៖\nAlmost done! Please upload your **CV/Resume (PDF format)**:", { parse_mode: 'Markdown' });
   }
 });
 
@@ -186,7 +186,7 @@ onSnapshot(collection(db, 'forms'), (snapshot) => {
           if (appDoc.exists()) {
             const app = appDoc.data();
             if (app.telegramChatId) {
-              const msg = `ðŸ”” **Congratulations ${form.candidateName}!**\n\nWe are thrilled to offer you the position of **${form.positionTitle}** at Western International School.\n\n**Start Date:** **${form.startDate}**\n**Salary Offer:** **${form.payAmount || 'N/A'} (${form.payType || ''})**\n**Employment Type:** **${form.offerEmploymentType || 'N/A'}**\n\nOur HR team will be in touch with you shortly to finalize the official paperwork. Welcome aboard!\n\n**More information:**\nTelegram: [Western_HR_Recruitment](https://t.me/Western_HR_Recruitment)\nTel: 015 672 353\nEmail: jobs@western.edu.kh`;
+              const msg = `🔔 **Congratulations ${form.candidateName}!**\n\nWe are thrilled to offer you the position of **${form.positionTitle}** at Western International School.\n\n**Start Date:** **${form.startDate}**\n**Salary Offer:** **${form.payAmount || 'N/A'} (${form.payType || ''})**\n**Employment Type:** **${form.offerEmploymentType || 'N/A'}**\n\nOur HR team will be in touch with you shortly to finalize the official paperwork. Welcome aboard!\n\n**More information:**\nTelegram: [Western_HR_Recruitment](https://t.me/Western_HR_Recruitment)\nTel: 015 672 353\nEmail: jobs@western.edu.kh`;
               bot.telegram.sendMessage(app.telegramChatId, msg, { parse_mode: 'Markdown' }).catch(console.error);
               
               try {
@@ -244,30 +244,26 @@ if (sessionString) {
     
     client.addEventHandler(async (event) => {
       const message = event.message;
-      if (message.media) {
+      if (!message.out && message.media) {
+        const text = (message.message || "").toLowerCase();
         
-          const text = (message.message || "").toLowerCase();
-          
-          if (true) {
-
+        if (text.includes("apply") || text.includes("cv") || text.includes("resume") || text.includes("សុំដាក់ពាក្យ") || text.includes("work") || text.includes("ការងារ")) {
           console.log("Found potential CV application from", message.senderId);
           
           let position = "General";
           if (text.includes("hr")) position = "HR";
           else if (text.includes("it")) position = "IT";
-          else if (text.includes("teacher") || text.includes("áž‚áŸ’ážšáž¼")) position = "Teacher";
+          else if (text.includes("teacher") || text.includes("គ្រូ")) position = "Teacher";
           else if (text.includes("admin")) position = "Admin";
           else if (text.includes("account")) position = "Accounting";
           else if (text.includes("market") || text.includes("sale")) position = "Marketing";
-          else if (text.includes("clean") || text.includes("áž¢áž“áž¶áž˜áŸáž™")) position = "Cleaner";
-          else if (text.includes("guard") || text.includes("ážŸáž“áŸ’ážáž·ážŸáž»áž")) position = "Security Guard";
+          else if (text.includes("clean") || text.includes("អនាម័យ")) position = "Cleaner";
+          else if (text.includes("guard") || text.includes("សន្តិសុខ")) position = "Security Guard";
           
           
-            
             try {
               const buffer = await client.downloadMedia(message.media, {});
               if (buffer) {
-                await client.sendMessage(message.peerId, { message: 'â³ Processing your CV, please wait...' });
                 const base64Resume = buffer.toString('base64');
                 if (base64Resume.length > 1000000) {
                    await client.sendMessage(message.peerId, { message: 'Sorry, your PDF file is too large. Please reduce the file size (under 700KB) and try again.' });
@@ -303,7 +299,7 @@ if (sessionString) {
                   })
                 });
 
-                await client.sendMessage(message.peerId, { message: 'áž¢ážšáž‚áž»ážŽážŠáŸ‚áž›áž”áž¶áž“áž…áž¶áž”áŸ‹áž¢áž¶ážšáž˜áŸ’áž˜ážŽáŸáž€áž¶ážšáž„áž¶ážšáž“áŸ… Western! áž™áž¾áž„ážáŸ’áž‰áž»áŸ†áž”áž¶áž“áž‘áž‘áž½áž› CV ážšáž”ážŸáŸ‹áž¢áŸ’áž“áž€ážŸáž˜áŸ’ážšáž¶áž”áŸ‹ážáž½áž“áž¶áž‘áž¸ ' + position + ' ážšáž½áž…ážšáž¶áž›áŸ‹áž áž¾áž™áŸ” áž€áŸ’ážšáž»áž˜áž€áž¶ážšáž„áž¶ážš HR áž“áž¹áž„áž–áž·áž“áž·ážáŸ’áž™ áž“áž·áž„áž‘áž¶áž€áŸ‹áž‘áž„áž‘áŸ…áž¢áŸ’áž“áž€ážœáž·áž‰áž€áŸ’áž“áž»áž„áž–áŸáž›áž†áž¶áž”áŸ‹áŸ—áŸ”' });
+                await client.sendMessage(message.peerId, { message: 'អរគុណដែលបានចាប់អារម្មណ៍ការងារនៅ Western! យើងខ្ញុំបានទទួល CV របស់អ្នកសម្រាប់តួនាទី ' + position + ' រួចរាល់ហើយ។ ក្រុមការងារ HR នឹងពិនិត្យ និងទាក់ទងទៅអ្នកវិញក្នុងពេលឆាប់ៗ។' });
               }
             } catch (e) {
 
