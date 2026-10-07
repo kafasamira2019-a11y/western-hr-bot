@@ -1,7 +1,20 @@
 import { Telegraf } from 'telegraf';
 import * as http from 'http';
 const port = process.env.PORT || 3000;
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
+  if (req.url && req.url.startsWith('/cv/')) {
+    const fileId = req.url.split('/cv/')[1];
+    try {
+      const fileLink = await bot.telegram.getFileLink(fileId);
+      res.writeHead(302, { Location: fileLink.href });
+      res.end();
+    } catch (e) {
+      res.statusCode = 404;
+      res.end('File not found or invalid file_id');
+    }
+    return;
+  }
+
   res.statusCode = 200;
   res.setHeader('Content-Type', 'text/plain');
   res.end('Telegram Bot is running!\n');
@@ -81,13 +94,7 @@ bot.on('text', async (ctx) => {
     
     try {
       const fileLink = await ctx.telegram.getFileLink(appInfo.fileId);
-      const response = await fetch(fileLink);
-      const buffer = await response.arrayBuffer();
-      const base64Resume = Buffer.from(buffer).toString('base64');
       
-      if (base64Resume.length > 1000000) {
-        return ctx.reply("សុំទោស ឯកសារ PDF ធំពេក។ | Sorry, the PDF file is too large.");
-      }
   
       const newApp = {
         name: appInfo.candidateName,
@@ -97,7 +104,7 @@ bot.on('text', async (ctx) => {
         source: 'Forwarded by HR',
         telegramChatId: chatId.toString(),
         appliedAt: new Date().toISOString(),
-        resumeBase64: `data:${appInfo.mimeType || 'application/pdf'};base64,${base64Resume}`,
+        resumeBase64: 'https://western-hr-bot.onrender.com/cv/' + appInfo.fileId,
         resumeName: appInfo.fileName
       };
   
@@ -146,13 +153,7 @@ bot.on('document', async (ctx) => {
       
         try {
           const fileLink = await ctx.telegram.getFileLink(fileId);
-          const response = await fetch(fileLink);
-          const buffer = await response.arrayBuffer();
-          const base64Resume = Buffer.from(buffer).toString('base64');
           
-          if (base64Resume.length > 1000000) {
-            return ctx.reply("សុំទោស ឯកសារ PDF របស់អ្នកធំពេក។ | Sorry, your PDF file is too large.");
-          }
       
           const newApp = {
             name: state.data.name,
@@ -162,7 +163,7 @@ bot.on('document', async (ctx) => {
             source: 'Telegram Bot',
             telegramChatId: chatId.toString(),
             appliedAt: new Date().toISOString(),
-            resumeBase64: `data:${ctx.message.document.mime_type || 'application/pdf'};base64,${base64Resume}`,
+            resumeBase64: 'https://western-hr-bot.onrender.com/cv/' + fileId,
             resumeName: fileName
           };
       
