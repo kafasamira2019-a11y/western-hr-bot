@@ -47,7 +47,7 @@ bot.start((ctx) => {
   ctx.reply(welcomeMsg, { parse_mode: 'Markdown' });
 });
 
-bot.on('text', (ctx) => {
+bot.on('text', async (ctx) => {
   const chatId = ctx.chat.id;
   if (!userState[chatId]) {
     return ctx.reply("សូមចុចលើ /start ឬ Menu ដើម្បីចាប់ផ្តើម។\nPlease type /start or use the menu to begin.");
@@ -69,78 +69,32 @@ bot.on('text', (ctx) => {
     state.data.phone = ctx.message.text;
     state.step = 5;
     ctx.reply("ជិតរួចរាល់ហើយ! សូមបញ្ចូលប្រវត្តិរូបសង្ខេប (CV/Resume) ជាទម្រង់ PDF របស់អ្នក៖\nAlmost done! Please upload your **CV/Resume (PDF format)**:", { parse_mode: 'Markdown' });
-  }
-});
-
-bot.on('document', async (ctx) => {
-    const chatId = ctx.chat.id;
-    let candidateName = "Unknown Candidate";
-    let candidatePhone = "Unknown";
-    let candidatePosition = "General (Forwarded)";
-    let isForwarded = false;
-
-    if (ctx.message.forward_origin || ctx.message.forward_date) {
-        isForwarded = true;
-        if (ctx.message.forward_origin && ctx.message.forward_origin.sender_user) {
-            candidateName = ctx.message.forward_origin.sender_user.first_name || "";
-            if (ctx.message.forward_origin.sender_user.last_name) candidateName += " " + ctx.message.forward_origin.sender_user.last_name;
-        } else if (ctx.message.forward_from) {
-            candidateName = ctx.message.forward_from.first_name || "";
-            if (ctx.message.forward_from.last_name) candidateName += " " + ctx.message.forward_from.last_name;
-        } else if (ctx.message.forward_sender_name) {
-            candidateName = ctx.message.forward_sender_name;
-        } else {
-            candidateName = "Candidate (Hidden Name)";
-        }
-        
-        const caption = (ctx.message.caption || '').toLowerCase();
-        if (caption.includes('hr')) candidatePosition = 'HR';
-        else if (caption.includes('it')) candidatePosition = 'IT';
-        else if (caption.includes('teacher') || caption.includes('គ្រូ')) candidatePosition = 'Teacher';
-        else if (caption.includes('admin')) candidatePosition = 'Admin';
-        else if (caption.includes('account')) candidatePosition = 'Accounting';
-        else if (caption.includes('market') || caption.includes('sale')) candidatePosition = 'Marketing';
-        else if (caption.includes('principal')) candidatePosition = 'School Principal';
-        
-    } else {
-        if (!userState[chatId] || userState[chatId].step !== 5) {
-          return ctx.reply("សូមវាយ /start ឬប្រើ Menu ដើម្បីចាប់ផ្តើម។ | Please type /start or use the menu to begin.");
-        }
-        const state = userState[chatId];
-        candidateName = state.data.name;
-        candidatePhone = state.data.phone;
-        candidatePosition = state.data.position;
-    }
-
-    const fileId = ctx.message.document.file_id;
-    const fileName = ctx.message.document.file_name;
-  
-    if (!fileName || !fileName.toLowerCase().endsWith('.pdf')) {
-      return ctx.reply("សូមបញ្ជូនតែឯកសារ PDF ប៉ុណ្ណោះ។ | Please upload a PDF file only.");
-    }
-  
-    ctx.reply("កំពុងបញ្ចូលឯកសាររបស់អ្នក... | Uploading application...");
-  
+  } else if (state.step === 10) {
+    const position = ctx.message.text;
+    const appInfo = state.data.forwardedApp;
+    
+    ctx.reply("កំពុងបញ្ចូលឯកសាររបស់បេក្ខជន... | Uploading candidate's application...");
+    
     try {
-      const fileLink = await ctx.telegram.getFileLink(fileId);
+      const fileLink = await ctx.telegram.getFileLink(appInfo.fileId);
       const response = await fetch(fileLink);
       const buffer = await response.arrayBuffer();
       const base64Resume = Buffer.from(buffer).toString('base64');
       
       if (base64Resume.length > 1000000) {
-        return ctx.reply("សុំទោស ឯកសារ PDF របស់អ្នកធំពេក។ | Sorry, your PDF file is too large.");
+        return ctx.reply("សុំទោស ឯកសារ PDF ធំពេក។ | Sorry, the PDF file is too large.");
       }
   
       const newApp = {
-        name: candidateName,
-        phone: candidatePhone,
-        position: candidatePosition,
+        name: appInfo.candidateName,
+        phone: 'Unknown',
+        position: position,
         status: 'new',
-        source: isForwarded ? 'Forwarded by HR' : 'Telegram Bot',
+        source: 'Forwarded by HR',
         telegramChatId: chatId.toString(),
         appliedAt: new Date().toISOString(),
-        resumeBase64: `data:${ctx.message.document.mime_type || 'application/pdf'};base64,${base64Resume}`,
-        resumeName: fileName
+        resumeBase64: `data:${appInfo.mimeType || 'application/pdf'};base64,${base64Resume}`,
+        resumeName: appInfo.fileName
       };
   
       const docRef = await addDoc(collection(db, 'applications'), newApp);
@@ -156,22 +110,112 @@ bot.on('document', async (ctx) => {
           phone: newApp.phone,
           position: newApp.position,
           status: newApp.status,
-          resumeLink: `Telegram CV Uploaded (${fileName})`
+          resumeLink: `Telegram CV Uploaded (${appInfo.fileName})`
         })
       });
   
-      if (isForwarded) {
-         ctx.reply(`✅ CV របស់ ${candidateName} សម្រាប់តួនាទី ${candidatePosition} ត្រូវបានរក្សាចូលក្នុង Google Sheets ដោយជោគជ័យ!`);
-      } else {
-         ctx.reply(`ឯកសារដាក់ពាក្យសម្រាប់តួនាទី ${candidatePosition} ត្រូវបានរក្សាទុកដោយជោគជ័យ។ | Application saved successfully.`, { parse_mode: 'Markdown' });
-         delete userState[chatId];
-      }
+      ctx.reply(`✅ CV របស់លោកអ្នកត្រូវបានផ្ញើចូលក្នុងប្រព័ន្ធជ្រើសរើសបុគ្គលិកដោយជោគជ័យ។\n✅ Your CV has been successfully submitted to the recruitment system.`);
+      delete userState[chatId];
     } catch (error) {
-      console.error("Error saving application:", error);
+      console.error("Error saving forwarded application:", error);
       ctx.reply("សុំទោស មានបញ្ហាក្នុងការបញ្ចូលទិន្នន័យ។ | Sorry, there was an error.");
-      if (!isForwarded) delete userState[chatId];
+      delete userState[chatId];
     }
-  });
+  }
+});
+
+bot.on('document', async (ctx) => {
+    const chatId = ctx.chat.id;
+    let candidateName = "Unknown Candidate";
+
+    if (ctx.message.forward_origin || ctx.message.forward_date) {
+        if (ctx.message.forward_origin && ctx.message.forward_origin.sender_user) {
+            candidateName = ctx.message.forward_origin.sender_user.first_name || "";
+            if (ctx.message.forward_origin.sender_user.last_name) candidateName += " " + ctx.message.forward_origin.sender_user.last_name;
+        } else if (ctx.message.forward_from) {
+            candidateName = ctx.message.forward_from.first_name || "";
+            if (ctx.message.forward_from.last_name) candidateName += " " + ctx.message.forward_from.last_name;
+        } else if (ctx.message.forward_sender_name) {
+            candidateName = ctx.message.forward_sender_name;
+        } else {
+            candidateName = "Candidate (Hidden Name)";
+        }
+        
+        userState[chatId] = {
+           step: 10,
+           data: {
+              forwardedApp: {
+                 candidateName: candidateName,
+                 fileId: ctx.message.document.file_id,
+                 fileName: ctx.message.document.file_name,
+                 mimeType: ctx.message.document.mime_type
+              }
+           }
+        };
+        return ctx.reply(`អ្នកបានបញ្ជូន CV របស់បេក្ខជន **${candidateName}** ។\nតើគាត់ចង់ដាក់ពាក្យលើតួនាទីអ្វី?\n\nYou forwarded the CV of **${candidateName}**.\nWhat position do they want to apply for?`, { parse_mode: 'Markdown' });
+    } else {
+        if (!userState[chatId] || userState[chatId].step !== 5) {
+          return ctx.reply("សូមវាយ /start ឬប្រើ Menu ដើម្បីចាប់ផ្តើម។ | Please type /start or use the menu to begin.");
+        }
+        const state = userState[chatId];
+        const candidatePosition = state.data.position;
+        const fileId = ctx.message.document.file_id;
+        const fileName = ctx.message.document.file_name;
+      
+        if (!fileName || !fileName.toLowerCase().endsWith('.pdf')) {
+          return ctx.reply("សូមបញ្ជូនតែឯកសារ PDF ប៉ុណ្ណោះ។ | Please upload a PDF file only.");
+        }
+      
+        ctx.reply("កំពុងបញ្ចូលឯកសាររបស់អ្នក... | Uploading application...");
+      
+        try {
+          const fileLink = await ctx.telegram.getFileLink(fileId);
+          const response = await fetch(fileLink);
+          const buffer = await response.arrayBuffer();
+          const base64Resume = Buffer.from(buffer).toString('base64');
+          
+          if (base64Resume.length > 1000000) {
+            return ctx.reply("សុំទោស ឯកសារ PDF របស់អ្នកធំពេក។ | Sorry, your PDF file is too large.");
+          }
+      
+          const newApp = {
+            name: state.data.name,
+            phone: state.data.phone,
+            position: candidatePosition,
+            status: 'new',
+            source: 'Telegram Bot',
+            telegramChatId: chatId.toString(),
+            appliedAt: new Date().toISOString(),
+            resumeBase64: `data:${ctx.message.document.mime_type || 'application/pdf'};base64,${base64Resume}`,
+            resumeName: fileName
+          };
+      
+          const docRef = await addDoc(collection(db, 'applications'), newApp);
+      
+          await fetch('https://script.google.com/macros/s/AKfycbyDAB6OE9BnC6HNVs_yl5A4BsRurxHoVJsnt-GW4ZiQWiWD_w9-7NBVP_vkgi2pImM6/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              action: 'add',
+              id: docRef.id,
+              name: newApp.name,
+              email: '',
+              phone: newApp.phone,
+              position: newApp.position,
+              status: newApp.status,
+              resumeLink: `Telegram CV Uploaded (${fileName})`
+            })
+          });
+      
+          ctx.reply(`✅ CV របស់លោកអ្នកត្រូវបានផ្ញើចូលក្នុងប្រព័ន្ធជ្រើសរើសបុគ្គលិកដោយជោគជ័យ។\n✅ Your CV has been successfully submitted to the recruitment system.`);
+          delete userState[chatId];
+        } catch (error) {
+          console.error("Error saving application:", error);
+          ctx.reply("សុំទោស មានបញ្ហាក្នុងការបញ្ចូលទិន្នន័យ។ | Sorry, there was an error.");
+          delete userState[chatId];
+        }
+    }
+});
 
 const processedForms = new Set();
 onSnapshot(collection(db, 'forms'), (snapshot) => {
