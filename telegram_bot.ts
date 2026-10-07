@@ -211,4 +211,4 @@ onSnapshot(collection(db, 'forms'), (snapshot) => {
 bot.launch().then(() => console.log('Telegram Bot ESM running...')).catch(console.error);
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));\n
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
