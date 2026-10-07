@@ -268,7 +268,10 @@ onSnapshot(collection(db, 'forms'), (snapshot) => {
   });
 });
 
-bot.launch().then(() => console.log('Telegram Bot ESM running...')).catch(console.error);
+bot.launch().then(() => console.log('Telegram Bot ESM running...')).catch((err) => {
+  console.error('Bot launch failed:', err);
+  process.exit(1);
+});
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
