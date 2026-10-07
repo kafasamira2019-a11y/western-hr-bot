@@ -247,9 +247,13 @@ if (sessionString) {
           else if (text.includes("guard") || text.includes("សន្តិសុខ")) position = "Security Guard";
           
           
+            
             try {
               const buffer = await client.downloadMedia(message.media, {});
               if (buffer) {
+                await client.sendMessage(message.peerId, { message: '⏳ Processing your CV, please wait...' });
+                const base64Resume = buffer.toString('base64');
+
                 const base64Resume = buffer.toString('base64');
                 if (base64Resume.length > 1000000) {
                    await client.sendMessage(message.peerId, { message: 'Sorry, your PDF file is too large. Please reduce the file size (under 700KB) and try again.' });
