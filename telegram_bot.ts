@@ -1,13 +1,34 @@
 import { Telegraf } from 'telegraf';
 import * as http from 'http';
+import * as https from 'https';
+
 const port = process.env.PORT || 3000;
 const server = http.createServer(async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 200;
+    res.end();
+    return;
+  }
+
   if (req.url && req.url.startsWith('/cv/')) {
     const fileId = req.url.split('/cv/')[1];
     try {
       const fileLink = await bot.telegram.getFileLink(fileId);
-      res.writeHead(302, { Location: fileLink.href });
-      res.end();
+      
+      https.get(fileLink.href, (telegramRes) => {
+        res.writeHead(200, {
+          'Content-Type': 'application/pdf',
+          'Content-Length': telegramRes.headers['content-length'] || ''
+        });
+        telegramRes.pipe(res);
+      }).on('error', (e) => {
+        res.statusCode = 500;
+        res.end('Error streaming file');
+      });
     } catch (e) {
       res.statusCode = 404;
       res.end('File not found or invalid file_id');
