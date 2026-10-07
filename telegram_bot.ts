@@ -203,7 +203,7 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 // --- GRAMJS USERBOT ---
 const apiId = 32250553;
 const apiHash = "1555d8a69465b327b5372a49a317dbb6";
-let sessionString = process.env.TELEGRAM_SESSION || "";
+let sessionString = (process.env.TELEGRAM_SESSION || "").trim();
 if (!sessionString) {
   try {
     sessionString = fs.readFileSync('session.txt', 'utf8').trim();
