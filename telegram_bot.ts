@@ -231,9 +231,11 @@ if (sessionString) {
     client.addEventHandler(async (event) => {
       const message = event.message;
       if (!message.out && message.media) {
-        const text = (message.message || "").toLowerCase();
         
-        if (text.includes("apply") || text.includes("cv") || text.includes("resume") || text.includes("សុំដាក់ពាក្យ") || text.includes("work") || text.includes("ការងារ")) {
+          const text = (message.message || "").toLowerCase();
+          
+          if (true) {
+
           console.log("Found potential CV application from", message.senderId);
           
           let position = "General";
