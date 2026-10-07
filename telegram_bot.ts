@@ -131,22 +131,8 @@ bot.on('text', async (ctx) => {
 bot.on('document', async (ctx) => {
     const chatId = ctx.chat.id;
 
-    if (ctx.message.forward_origin || ctx.message.forward_date) {
-        userState[chatId] = {
-           step: 10,
-           data: {
-              forwardedApp: {
-                 fileId: ctx.message.document.file_id,
-                 fileName: ctx.message.document.file_name,
-                 mimeType: ctx.message.document.mime_type
-              }
-           }
-        };
-        return ctx.reply("តើបេក្ខជនមានឈ្មោះអ្វី?\nWhat is the candidate's name?", { parse_mode: 'Markdown' });
-    } else {
-        if (!userState[chatId] || userState[chatId].step !== 5) {
-          return ctx.reply("សូមវាយ /start ឬប្រើ Menu ដើម្បីចាប់ផ្តើម។ | Please type /start or use the menu to begin.");
-        }
+    if (userState[chatId] && userState[chatId].step === 5) {
+        // NORMAL APPLICANT FLOW
         const state = userState[chatId];
         const candidatePosition = state.data.position;
         const fileId = ctx.message.document.file_id;
@@ -204,6 +190,24 @@ bot.on('document', async (ctx) => {
           ctx.reply("សុំទោស មានបញ្ហាក្នុងការបញ្ចូលទិន្នន័យ។ | Sorry, there was an error.");
           delete userState[chatId];
         }
+    } else {
+        // ADMIN FORWARD / DIRECT UPLOAD FLOW
+        const fileName = ctx.message.document.file_name;
+        if (!fileName || !fileName.toLowerCase().endsWith('.pdf')) {
+          return ctx.reply("សូមបញ្ជូនតែឯកសារ PDF ប៉ុណ្ណោះ។ | Please upload a PDF file only.");
+        }
+
+        userState[chatId] = {
+           step: 10,
+           data: {
+              forwardedApp: {
+                 fileId: ctx.message.document.file_id,
+                 fileName: ctx.message.document.file_name,
+                 mimeType: ctx.message.document.mime_type
+              }
+           }
+        };
+        return ctx.reply("ឯកសារទទួលបាន! តើបេក្ខជននេះមានឈ្មោះអ្វី?\nDocument received! What is the candidate's name?", { parse_mode: 'Markdown' });
     }
 });
 
