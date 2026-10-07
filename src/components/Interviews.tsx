@@ -16,7 +16,9 @@ export default function Interviews() {
   const [interviewTime, setInterviewTime] = useState('');
   const [interviewType, setInterviewType] = useState('Online');
   const [stage, setStage] = useState('First round');
-  const [location, setLocation] = useState('');
+  const [building, setBuilding] = useState('E');
+  const [floor, setFloor] = useState('2nd');
+  const [location, setLocation] = useState('https://maps.app.goo.gl/xJT3esDBezChYgM29?g_st=it');
 
   useEffect(() => {
     // Fetch interviews
