@@ -1,8 +1,8 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Calendar, Clock, Video, MapPin, Search, Plus, Trash2, FileDown, ExternalLink, Eye, X, Download } from 'lucide-react';
+import { Calendar, Clock, Video, MapPin, Search, Plus, Trash2, FileDown, ExternalLink, Eye, X, Download, Send, Edit2 } from 'lucide-react';
 import { syncToGoogleSheet } from '../lib/sheets';
 
 export default function Interviews() {
@@ -19,6 +19,7 @@ export default function Interviews() {
   const [building, setBuilding] = useState('E');
   const [floor, setFloor] = useState('2nd');
   const [location, setLocation] = useState('https://maps.app.goo.gl/xJT3esDBezChYgM29?g_st=it');
+  const [editId, setEditId] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch interviews
@@ -36,6 +37,67 @@ export default function Interviews() {
     return () => { unsubInterviews(); unsubApps(); };
   }, []);
 
+  const handleEdit = (inv: any) => {
+    setSelectedAppId(inv.applicationId);
+    setInterviewDate(inv.interviewDate || '');
+    setInterviewTime(inv.interviewTime || '');
+    setInterviewType(inv.interviewType || 'Online');
+    setStage(inv.stage || 'First round');
+    setBuilding(inv.building || 'E');
+    setFloor(inv.floor || '2nd');
+    setLocation(inv.location || 'https://maps.app.goo.gl/xJT3esDBezChYgM29?g_st=it');
+    setEditId(inv.id);
+    setShowForm(true);
+  };
+
+  const sendInvitation = async (inv: any) => {
+    const app = applications.find(a => a.id === inv.applicationId);
+    if (!app || !app.telegramChatId) {
+      alert('Cannot send invitation: Candidate did not apply via Telegram or Chat ID is missing.');
+      return;
+    }
+
+    const msg = `🎉 **ការអញ្ជើញមកសម្ភាសន៍ / Interview Invitation**
+
+Dear **${inv.candidateName}**,
+
+We are pleased to invite you for an interview for the position of **${inv.position}** at Western International School.
+
+📅 **Date:** ${inv.interviewDate}
+⏰ **Time:** ${inv.interviewTime}
+🏢 **Type:** ${inv.interviewType} (${inv.stage})
+📍 **Building:** ${inv.building || 'E'}, **Floor:** ${inv.floor || '2nd'}
+🔗 **Location / Link:** [View Location/Link](${inv.location})
+
+សូមអញ្ជើញមកអោយបានទៀងទាត់ពេលវេលា។ សូមអរគុណ!
+Please be on time. Thank you!
+
+**Contact HR:**
+Telegram: @Western_HR_Recruitment
+Tel: 015 672 353`;
+
+    try {
+      const res = await fetch('https://api.telegram.org/bot8879984624:AAEHqarqaXI3KffYuFLelAyNhJmQqCN_qrg/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: app.telegramChatId,
+          text: msg,
+          parse_mode: 'Markdown'
+        })
+      });
+      if (res.ok) {
+        alert('✅ Invitation sent to candidate successfully!');
+      } else {
+        const error = await res.text();
+        alert('❌ Failed to send invitation: ' + error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Error sending invitation');
+    }
+  };
+
   const handleSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAppId) return alert('Select a candidate');
@@ -52,6 +114,8 @@ export default function Interviews() {
         interviewTime,
         interviewType,
         stage,
+        building,
+        floor,
         location,
         status: 'Scheduled',
         createdAt: Date.now()
@@ -61,7 +125,13 @@ export default function Interviews() {
       if (app.resumeBase64) payload.resumeBase64 = app.resumeBase64;
       if (app.resumeName) payload.resumeName = app.resumeName;
 
-      await addDoc(collection(db, 'interviews'), payload);
+      if (editId) {
+        await updateDoc(doc(db, 'interviews', editId), payload);
+        setEditId(null);
+      } else {
+        await addDoc(collection(db, 'interviews'), payload);
+      }
+      
       await syncToGoogleSheet('schedule', { id: payload.applicationId, scheduleDate: interviewDate, scheduleTime: interviewTime, scheduleType: interviewType, stage, location });
       setShowForm(false);
       setSelectedAppId('');
@@ -109,7 +179,7 @@ export default function Interviews() {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Schedule and track candidate interviews.</p>
         </div>
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => { setShowForm(!showForm); setEditId(null); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
         >
           {showForm ? 'Cancel' : <><Plus className="w-4 h-4" /> Schedule Interview</>}
@@ -118,7 +188,7 @@ export default function Interviews() {
 
       {showForm && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Schedule New Interview</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{editId ? 'Edit Interview' : 'Schedule New Interview'}</h3>
           <form onSubmit={handleSchedule} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Candidate</label>
@@ -158,8 +228,11 @@ export default function Interviews() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location / Link</label>
                 <input type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Room 101 or Zoom Link" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <div className="md:col-span-2 pt-2">
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition">Save Schedule</button>
+              <div className="md:col-span-2 pt-2 flex gap-2">
+              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition">{editId ? 'Update Schedule' : 'Save Schedule'}</button>
+              {editId && (
+                <button type="button" onClick={() => { setShowForm(false); setEditId(null); }} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 rounded-lg transition">Cancel</button>
+              )}
             </div>
           </form>
         </div>
@@ -225,7 +298,17 @@ export default function Interviews() {
                       </select>
                     </td>
                     <td className="px-6 py-4">
-                      <button onClick={() => deleteInterview(inv.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 className="w-4 h-4" /></button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleEdit(inv)} className="text-blue-500 hover:text-blue-700 p-1" title="Edit Interview">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => sendInvitation(inv)} className="text-green-500 hover:text-green-700 p-1" title="Send Invitation to Telegram">
+                          <Send className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => deleteInterview(inv.id)} className="text-red-500 hover:text-red-700 p-1" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
