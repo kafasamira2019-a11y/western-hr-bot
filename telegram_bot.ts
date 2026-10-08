@@ -142,7 +142,9 @@ bot.on('text', async (ctx) => {
           phone: newApp.phone,
           position: newApp.position,
           status: newApp.status,
-          resumeLink: `Telegram CV Uploaded (${appInfo.fileName})`
+          resumeLink: `Telegram CV Uploaded (${appInfo.fileName})`,
+            telegramFileUrl: fileLink.href,
+            fileName: appInfo.fileName
         })
       });
   
@@ -201,7 +203,9 @@ bot.on('document', async (ctx) => {
               phone: newApp.phone,
               position: newApp.position,
               status: newApp.status,
-              resumeLink: `Telegram CV Uploaded (${fileName})`
+              resumeLink: `Telegram CV Uploaded (${fileName})`,
+                telegramFileUrl: fileLink.href,
+                fileName: fileName
             })
           });
       

@@ -1,3 +1,27 @@
+function uploadToDrive(base64Data, fileName, telegramUrl) {
+  try {
+    var folderId = '1E4dpO5w8tlz8nLHPxCPzR35gkATixvFc';
+    var folder = DriveApp.getFolderById(folderId);
+    var blob;
+    
+    if (telegramUrl) {
+      var response = UrlFetchApp.fetch(telegramUrl);
+      blob = response.getBlob();
+      blob.setName(fileName || 'Document.pdf');
+    } else if (base64Data) {
+      blob = Utilities.newBlob(Utilities.base64Decode(base64Data), MimeType.PDF, fileName || 'Document.pdf');
+    } else {
+      return '';
+    }
+    
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return file.getUrl();
+  } catch (err) {
+    return 'Error: ' + err.toString();
+  }
+}
+
 function doPost(e) {
   // If no parameters, ignore
   if (!e || !e.parameter) {
@@ -26,12 +50,22 @@ function doPost(e) {
         var rawStatus = e.parameter.status || 'New';
         var safeStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
         
+        var resumeLink = e.parameter.resumeLink || '';
+        
+        // Handle Telegram File Upload to Drive
+        if (e.parameter.telegramFileUrl) {
+           var driveUrl = uploadToDrive(null, e.parameter.fileName, e.parameter.telegramFileUrl);
+           if (driveUrl && !driveUrl.startsWith('Error')) {
+             resumeLink = driveUrl; // Replace temporary telegram link with permanent Drive link
+           }
+        }
+        
         appSheet.appendRow([
           e.parameter.name || '',
           e.parameter.position || '',
           today,
           safeStatus,
-          e.parameter.resumeLink || '',
+          resumeLink,
           '', // Default action (blank to avoid data validation errors)
           id
         ]);
@@ -134,11 +168,20 @@ function doPost(e) {
     // ==========================================
     else if (action === 'add_form') {
       if (formSheet) {
+        var pdfLink = e.parameter.pdfLink || '';
+        
+        if (e.parameter.fileBase64) {
+          var driveUrl = uploadToDrive(e.parameter.fileBase64, e.parameter.formName + '.pdf', null);
+          if (driveUrl && !driveUrl.startsWith('Error')) {
+            pdfLink = driveUrl;
+          }
+        }
+
         formSheet.appendRow([
           e.parameter.formName || '',
           e.parameter.dateIssue || '',
           e.parameter.position || '',
-          e.parameter.pdfLink || '',
+          pdfLink,
           id
         ]);
       }

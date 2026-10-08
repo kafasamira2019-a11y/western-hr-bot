@@ -264,13 +264,17 @@ export default function InternalForms() {
       }
 
       const formTitle = getFormTypeLabel(dataToSave.type) + (dataToSave.candidateName ? ' - ' + dataToSave.candidateName : '');
-      await syncToGoogleSheet('add_form', {
-        id: formId,
-        formName: formTitle,
-        dateIssue: new Date().toISOString().split('T')[0],
-        position: dataToSave.positionTitle || dataToSave.position || '',
-        pdfLink: 'Generated in ATS'
-      });
+        const docPDF = generatePDF(dataToSave as any);
+        const dataUri = docPDF.output('datauristring') as string;
+        const base64Data = dataUri.split(',')[1];
+
+        await syncToGoogleSheet('add_form', {
+          id: formId,
+          formName: formTitle,
+          dateIssue: new Date().toISOString().split('T')[0],
+          position: dataToSave.positionTitle || dataToSave.position || '',
+          fileBase64: base64Data
+        });
       setShowNewModal(false);
       setEditingId(null);
       setFormData(initialFormState);
