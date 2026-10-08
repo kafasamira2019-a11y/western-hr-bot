@@ -52,12 +52,13 @@ function doPost(e) {
         
         var resumeLink = e.parameter.resumeLink || '';
         
-        // Handle Telegram File Upload to Drive
+        // Handle File Upload to Drive
         if (e.parameter.telegramFileUrl) {
            var driveUrl = uploadToDrive(null, e.parameter.fileName, e.parameter.telegramFileUrl);
-           if (driveUrl && !driveUrl.startsWith('Error')) {
-             resumeLink = driveUrl; // Replace temporary telegram link with permanent Drive link
-           }
+           if (driveUrl) resumeLink = driveUrl;
+        } else if (e.parameter.fileBase64) {
+           var driveUrl = uploadToDrive(e.parameter.fileBase64, e.parameter.fileName, null);
+           if (driveUrl) resumeLink = driveUrl;
         }
         
         appSheet.appendRow([

@@ -74,7 +74,9 @@ export default function CandidateForm() {
         phone: payload.phone,
         position: payload.position,
         status: payload.status,
-        resumeLink: payload.resumeLink || (file ? `PDF Uploaded (${file.name})` : '')
+        resumeLink: payload.resumeLink || (file ? `PDF Uploaded (${file.name})` : ''),
+          fileBase64: payload.resumeBase64 ? payload.resumeBase64.split(',')[1] : null,
+          fileName: payload.resumeName
       });
 
       setStatus('success');
