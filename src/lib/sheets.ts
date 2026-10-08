@@ -1,6 +1,6 @@
 export const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDAB6OE9BnC6HNVs_yl5A4BsRurxHoVJsnt-GW4ZiQWiWD_w9-7NBVP_vkgi2pImM6/exec';
 
-export const syncToGoogleSheet = async (action: 'add' | 'delete' | 'update' | 'schedule', data: any) => {
+export const syncToGoogleSheet = async (action: 'add' | 'delete' | 'update' | 'schedule' | 'delete_interview' | 'add_form' | 'delete_form', data: any) => {
   try {
     const payload: Record<string, string> = {
       action,

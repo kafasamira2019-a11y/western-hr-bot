@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Plus, Check, X, FileText, Download, Eye, Trash2, Edit, Shield } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import { syncToGoogleSheet } from '../lib/sheets';
 import { generatePDF, getFormTypeLabel, STANDARD_JOB_RESPONSIBILITIES, getStandardJobOfferDescription } from '../utils/formPdfGenerator';
 
 export default function InternalForms() {
@@ -247,18 +248,29 @@ export default function InternalForms() {
 
 
 
+      let formId = editingId;
       if (editingId) {
         await updateDoc(doc(db, 'forms', editingId), {
           ...dataToSave,
           updatedAt: Date.now()
         });
       } else {
-        await addDoc(collection(db, 'forms'), {
+        const docRef = await addDoc(collection(db, 'forms'), {
           ...dataToSave,
-          createdBy: 'Admin User', // In real app, from Auth context
+          createdBy: 'Admin User',
           createdAt: Date.now()
         });
+        formId = docRef.id;
       }
+
+      const formTitle = getFormTypeLabel(dataToSave.type) + (dataToSave.candidateName ? ' - ' + dataToSave.candidateName : '');
+      await syncToGoogleSheet('add_form', {
+        id: formId,
+        formName: formTitle,
+        dateIssue: new Date().toISOString().split('T')[0],
+        position: dataToSave.positionTitle || dataToSave.position || '',
+        pdfLink: 'Generated in ATS'
+      });
       setShowNewModal(false);
       setEditingId(null);
       setFormData(initialFormState);
@@ -269,6 +281,7 @@ export default function InternalForms() {
 
   const handleDelete = async (id: string) => {
     await deleteDoc(doc(db, 'forms', id));
+    await syncToGoogleSheet('delete_form', { id });
   };
 
   const handleEdit = (form: any) => {
@@ -456,10 +469,10 @@ export default function InternalForms() {
                         jobStatus: prev.jobStatus || 'Full-time',
                         jobSummary: prev.jobSummary || 'Responsible for executing and supporting human resources operations, talent acquisition, employee relations, and policy compliance aligned with WIS organizational objectives.',
                         keyResponsibilities: STANDARD_JOB_RESPONSIBILITIES,
-                        qualDegree: prev.qualDegree || 'Bachelorâ€™s degree',
+                        qualDegree: prev.qualDegree || 'Bachelor’s degree',
                         qualMajor: prev.qualMajor || 'Human Resources Management, Business Administration, or related field',
-                        qualExperience: prev.qualExperience || '2â€“5 years of progressive experience in HR functions',
-                        skillSoft: prev.skillSoft || 'â€¢ Excellent communication, interpersonal, and consultative skills.\nâ€¢ Strong problem-solving, conflict resolution, and decision-making abilities.\nâ€¢ High level of integrity, discretion, and confidentiality.\nâ€¢ Ability to build relationships and influence at all levels of the organization.',
+                        qualExperience: prev.qualExperience || '2–5 years of progressive experience in HR functions',
+                        skillSoft: prev.skillSoft || '• Excellent communication, interpersonal, and consultative skills.\n• Strong problem-solving, conflict resolution, and decision-making abilities.\n• High level of integrity, discretion, and confidentiality.\n• Ability to build relationships and influence at all levels of the organization.',
                         skillLanguage: prev.skillLanguage || 'Khmer and English',
                         skillComputer: prev.skillComputer || 'Microsoft Office, HRIS Tools, AI Tools',
                         employeeName: prev.employeeName || ''

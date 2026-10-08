@@ -9,6 +9,7 @@ function doPost(e) {
   var appSheet = sheet.getSheetByName('Applications');
   var intSheet = sheet.getSheetByName('Interview');
   var shortSheet = sheet.getSheetByName('Shortlist');
+  var formSheet = sheet.getSheetByName('Internal Forms') || sheet.getSheetByName('Staff Profile');
   
   var action = e.parameter.action;
   var id = e.parameter.id;
@@ -129,10 +130,43 @@ function doPost(e) {
     }
     
     // ==========================================
+    // ACTION: ADD FORM
+    // ==========================================
+    else if (action === 'add_form') {
+      if (formSheet) {
+        formSheet.appendRow([
+          e.parameter.formName || '',
+          e.parameter.dateIssue || '',
+          e.parameter.position || '',
+          e.parameter.pdfLink || '',
+          id
+        ]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({'status': 'success'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ==========================================
+    // ACTION: DELETE FORM
+    // ==========================================
+    else if (action === 'delete_form') {
+      if (formSheet) {
+        var data = formSheet.getDataRange().getValues();
+        for (var i = data.length - 1; i >= 0; i--) {
+          if (data[i].indexOf(id) !== -1) {
+            formSheet.deleteRow(i + 1);
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({'status': 'deleted_form'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ==========================================
     // ACTION: DELETE (From all sheets)
     // ==========================================
     else if (action === 'delete') {
-      var sheetsToSearch = ['Applications', 'Interview', 'Shortlist', 'Staff Profile']; 
+      var sheetsToSearch = ['Applications', 'Interview', 'Shortlist']; 
       
       for (var s = 0; s < sheetsToSearch.length; s++) {
         var currentSheet = sheet.getSheetByName(sheetsToSearch[s]);
