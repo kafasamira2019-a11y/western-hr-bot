@@ -152,10 +152,10 @@ Please be on time. Thank you!
     }
   };
 
-  const deleteInterview = async (id: string) => {
+  const deleteInterview = async (inv: any) => {
     try {
-      await deleteDoc(doc(db, 'interviews', id));
-      await syncToGoogleSheet('delete_interview', { id });
+      await deleteDoc(doc(db, 'interviews', inv.id));
+      await syncToGoogleSheet('delete_interview', { id: inv.applicationId });
     } catch (err) {
       console.error(err);
     }
@@ -306,7 +306,7 @@ Please be on time. Thank you!
                         <button onClick={() => sendInvitation(inv)} className="text-green-500 hover:text-green-700 p-1" title="Send Invitation to Telegram">
                           <Send className="w-4 h-4" />
                         </button>
-                        <button onClick={() => deleteInterview(inv.id)} className="text-red-500 hover:text-red-700 p-1" title="Delete">
+                        <button onClick={() => deleteInterview(inv)} className="text-red-500 hover:text-red-700 p-1" title="Delete">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

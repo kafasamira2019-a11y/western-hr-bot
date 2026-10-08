@@ -131,7 +131,7 @@ function doPost(e) {
     // ==========================================
     // ACTION: DELETE (From all sheets)
     // ==========================================
-    else if (action === 'delete' || action === 'delete_interview') {
+    else if (action === 'delete') {
       var sheetsToSearch = ['Applications', 'Interview', 'Shortlist', 'Staff Profile']; 
       
       for (var s = 0; s < sheetsToSearch.length; s++) {
@@ -147,6 +147,22 @@ function doPost(e) {
         }
       }
       return ContentService.createTextOutput(JSON.stringify({'status': 'deleted'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ==========================================
+    // ACTION: DELETE INTERVIEW (Only from Interview sheet)
+    // ==========================================
+    else if (action === 'delete_interview') {
+      if (intSheet) {
+        var data = intSheet.getDataRange().getValues();
+        for (var i = data.length - 1; i >= 0; i--) {
+          if (data[i].indexOf(id) !== -1) {
+            intSheet.deleteRow(i + 1);
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({'status': 'deleted_interview'}))
         .setMimeType(ContentService.MimeType.JSON);
     }
     
