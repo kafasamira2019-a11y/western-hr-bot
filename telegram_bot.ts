@@ -131,7 +131,7 @@ bot.on('text', async (ctx) => {
   
       const docRef = await addDoc(collection(db, 'applications'), newApp);
   
-      await fetch('https://script.google.com/macros/s/AKfycbyDAB6OE9BnC6HNVs_yl5A4BsRurxHoVJsnt-GW4ZiQWiWD_w9-7NBVP_vkgi2pImM6/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbyaZ55gc4IP4Zu3n5awGb1AkgJdcnOfgg3gsXheVJ-KrQcCZ79FpAJFzYZV3Td4qm67/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -192,7 +192,7 @@ bot.on('document', async (ctx) => {
       
           const docRef = await addDoc(collection(db, 'applications'), newApp);
       
-          await fetch('https://script.google.com/macros/s/AKfycbyDAB6OE9BnC6HNVs_yl5A4BsRurxHoVJsnt-GW4ZiQWiWD_w9-7NBVP_vkgi2pImM6/exec', {
+          await fetch('https://script.google.com/macros/s/AKfycbyaZ55gc4IP4Zu3n5awGb1AkgJdcnOfgg3gsXheVJ-KrQcCZ79FpAJFzYZV3Td4qm67/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
